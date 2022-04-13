@@ -1,0 +1,3 @@
+#!/bin/bash
+TMUX_FOLDER=/tmp/tmux-$(id -u)
+chmod g+x $TMUX_FOLDER

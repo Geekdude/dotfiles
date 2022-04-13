@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+
+# Script to reduce the size of images for website thumbnails.
+
+import argparse
+import subprocess
+import sys
+import re
+import os
+
+def main(argv):
+    parser = argparse.ArgumentParser(description="""Script to reduce the size of images for website thumbnails.""")
+    parser.add_argument('images', nargs='+')
+    parser.add_argument('-v', '--verbose', help='Print command used', action='store_true')
+    parser.add_argument('-j', '--jekyll', help='Print message needed to include images in jekyll', action='store_true')
+    parser.add_argument('-n', '--noop', help="Don't perform the convert but print operations.", action='store_true')
+    parser.add_argument('-p', '--prefix', help='custom prefix for Jekyll image path', type=str)
+    parser.add_argument('-s', '--height', help='reduce image to a height', type=int)
+    parser.add_argument('-w', '--width', help='reduce image to a width', type=int)
+    args = parser.parse_args(argv[1:])
+
+    if args.height == None and args.width == None:
+        args.height = 400
+
+    for image in args.images:
+        image = image.replace(' ', '\ ')
+        name, ext = os.path.splitext(image)
+
+        # Do not convert already converted thumbnails.
+        if name[-3:] == '-th':
+            continue
+
+        # Specify shrink by width
+        if args.width and not args.height:
+            command = f'convert -resize {args.width}x {image} {name}-th{ext}'
+            if args.verbose:
+                print(subprocess.check_output(f'echo {command}', shell=True).decode(), end='', file=sys.stderr)
+            if not args.noop:
+                print(subprocess.check_output(command, shell=True).decode(), end='', file=sys.stderr)
+
+        # Specify shrink by height
+        elif not args.width and args.height:
+            command = f'convert -resize x{args.height} {image} {name}-th{ext}'
+            if args.verbose:
+                print(subprocess.check_output(f'echo {command}', shell=True).decode(), end='', file=sys.stderr)
+            if not args.noop:
+                print(subprocess.check_output(command, shell=True).decode(), end='', file=sys.stderr)
+
+        # Specify height and width
+        else:
+            command = f'convert -resize {args.width}x{args.height} {image} {name}-th{ext}'
+            if args.verbose:
+                print(subprocess.check_output(f'echo {command}', shell=True).decode(), end='', file=sys.stderr)
+            if not args.noop:
+                print(subprocess.check_output(command, shell=True).decode(), end='', file=sys.stderr)
+
+        # Print out message for including image in gallery in jekyll
+        if args.jekyll:
+            if args.prefix:
+                print(f"""    - url: /assets/images/{args.prefix}/{image}
+      image_path: /assets/images/{args.prefix}/{name}-th{ext}
+      alt: "{name}"
+      title: ""
+""", end='')
+            else:
+                print(f"""    - url: /assets/images/{image}
+      image_path: /assets/images/{name}-th{ext}
+      alt: "{name}"
+      title: ""
+""", end='')
+
+
+if __name__ == '__main__':
+    main(sys.argv)

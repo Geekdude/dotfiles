@@ -1,0 +1,8 @@
+# add my local bin to the path
+export PATH="$HOME/bin:$PATH"
+
+# Add opt folder path
+export PATH="$HOME/opt:$PATH"
+
+# Add local bin
+export PATH="$PATH:$HOME/.local/bin"

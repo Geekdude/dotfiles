@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+# Script to reduce the size of a pdf file.
+
+import argparse
+import subprocess
+import sys
+
+def main(argv):
+    parser = argparse.ArgumentParser(description="""Script to reduce the size of PDF files.""")
+    parser.add_argument('-i', '--input-file', help='PDF input file.', type=str, required=True)
+    parser.add_argument('-o', '--output-file', help='PDF output file.', type=str, required=True)
+    parser.add_argument('-c', '--command', help='Reduction command to use. Default:gs', type=str, default='gs', choices=['gs', 'ps2pdf'])
+    parser.add_argument('-q', '--quality', help='Quality level for gs. Default:ebook', type=str, default='ebook', choices=['screen', 'ebook', 'printer', 'prepress', 'default'])
+    args = parser.parse_args(argv[1:])
+
+    if args.command == 'gs':
+        command = f'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.6 -dPDFSETTINGS=/{args.quality} -dNOPAUSE -dQUIET -dBATCH -sOutputFile="{args.output_file}" "{args.input_file}"'
+        print(subprocess.check_output(f'echo {command}', shell=True).decode(), end='')
+        print(subprocess.check_output(command, shell=True).decode(), end='')
+
+    elif args.command == 'ps2pdf':
+        command = f'ps2pdf {args.input_file} {args.output_file}'
+        print(subprocess.check_output(f'echo {command}', shell=True).decode(), end='')
+        print(subprocess.check_output(command, shell=True).decode(), end='')
+
+if __name__ == '__main__':
+    main(sys.argv)

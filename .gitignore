@@ -1,0 +1,14 @@
+*.netrwhist
+*.spl
+*.sug
+*.old
+*.orig
+zsh_files/.zsh.history
+vim/backup/
+vim/undo/
+vim/swap/
+vim/view/
+vim/init.vim
+fish/fish_variables
+tmux/resurrect
+*.uuid

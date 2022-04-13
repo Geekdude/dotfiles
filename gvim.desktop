@@ -1,0 +1,11 @@
+[Desktop Entry]
+Categories=;
+Comment=Edit file in Vim
+Exec=gvim %f
+GenericName=Text Editor
+Hidden=false
+Icon=gvim
+Name=GVim
+Terminal=false
+Type=Application
+Version=1.0

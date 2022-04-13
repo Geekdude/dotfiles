@@ -1,0 +1,5 @@
+#!/bin/bash
+# TMUX_SOCKET=/tmp/tmux-$(id -u)/default
+# tmux -S $TMUX_SOCKET new -d -s tmux; tmux -S $TMUX_SOCKET new -t tmux \; set-option destroy-unattached
+
+tmux new -d -s tmux; tmux new -t tmux \; set-option destroy-unattached

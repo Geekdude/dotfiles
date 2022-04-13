@@ -1,0 +1,303 @@
+#!/usr/bin/env python3
+
+"""Warper to access the ESV API."""
+
+import sys
+import argparse
+import requests
+import tempfile
+import os
+import io
+import time
+import textwrap
+
+import subprocess
+
+# import gi
+# gi.require_version("Gtk", "3.0")
+# from gi.repository import Gtk
+
+class DefaultSubcommandArgParse(argparse.ArgumentParser):
+    """default subparser selection. Call after setup, just before parse_args()
+    name: is the name of the subparser to call by default
+    args: if set is the argument list handed to parse_args()
+
+    , tested with 2.7, 3.2, 3.3, 3.4
+    it works with 2.6 assuming argparse is installed
+    """
+
+    __default_subparser = None
+
+    def set_default_subparser(self, name):
+        self.__default_subparser = name
+
+    def _parse_known_args(self, arg_strings, *args, **kwargs):
+        in_args = set(arg_strings)
+        d_sp = self.__default_subparser
+        if d_sp is not None and not {'-h', '--help'}.intersection(in_args):
+            for x in self._subparsers._actions:
+                subparser_found = (
+                    isinstance(x, argparse._SubParsersAction) and
+                    in_args.intersection(x._name_parser_map.keys())
+                )
+                if subparser_found:
+                    break
+            else:
+                # insert default in first position, this implies no
+                # global options without a sub_parsers specified
+                arg_strings = [d_sp] + arg_strings
+        return super(DefaultSubcommandArgParse, self)._parse_known_args(
+            arg_strings, *args, **kwargs
+        )
+
+
+# class EsvWindow(Gtk.Window):
+#     def __init__(self, esv):
+#         Gtk.Window.__init__(self, title="ESV")
+
+#         self.esv = esv
+
+#         self.set_default_size(600, 400)
+
+#         # Add main box
+#         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+#         self.add(self.main_box)
+
+#         # Add Search Box
+#         self.search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
+#         self.main_box.pack_start(self.search_box, False, True, 0)
+
+#         self.text_bar = Gtk.Entry()
+#         self.text_bar.connect("activate", self.on_go_clicked)
+#         self.search_box.pack_start(self.text_bar, True, True, 0)
+
+#         self.search = Gtk.Button(label="Go")
+#         self.search.connect("clicked", self.on_go_clicked)
+#         self.search_box.pack_start(self.search, False, True, 0)
+
+#         # Add Text Box
+#         self.scrolled_window = Gtk.ScrolledWindow()
+#         self.scrolled_window.set_hexpand(True)
+#         self.scrolled_window.set_vexpand(True)
+#         self.main_box.pack_start(self.scrolled_window, True, True, 0)
+
+#         self.text_view = Gtk.TextView(editable=False, cursor_visible=False, wrap_mode=Gtk.WrapMode.WORD)
+#         self.text_view.set_top_margin(10)
+#         self.text_view.set_bottom_margin(10)
+#         self.text_view.set_left_margin(10)
+#         self.text_view.set_right_margin(10)
+#         self.scrolled_window.add(self.text_view)
+
+#     def on_go_clicked(self, widget):
+#         self.esv.parse_func(self.text_bar.get_text())
+
+
+API_KEY = 'Secret'
+API_TEXT_URL = 'https://api.esv.org/v3/passage/text/'
+API_AUDIO_URL = 'https://api.esv.org/v3/passage/audio/'
+API_SEARCH_URL = 'https://api.esv.org/v3/passage/search/'
+
+
+def get_esv_text(passage, verse=False):
+    """Get text from ESV using the web API."""
+    params = {
+        'q': passage,
+        'include-headings': True,
+        'include-footnotes': False,
+        'include-verse-numbers': verse,
+        'include-short-copyright': False,
+        'include-passage-references': False
+    }
+
+    headers = {
+        'Authorization': 'Token %s' % API_KEY
+    }
+
+    response = requests.get(API_TEXT_URL, params=params, headers=headers)
+
+    return response.json()
+
+
+def get_esv_audio(passage):
+    """Get audio from ESV using the web API."""
+    params = {
+        'q': passage,
+    }
+
+    headers = {
+        'Authorization': 'Token %s' % API_KEY
+    }
+
+    response = requests.get(API_AUDIO_URL, params=params, headers=headers)
+
+    return response
+
+
+def search_esv_text(phrase, page_size=20, page=1):
+    """Search text from ESV using the web API."""
+    params = {
+        'q': phrase,
+        'page-size': page_size,
+        'page': page,
+    }
+
+    headers = {
+        'Authorization': 'Token %s' % API_KEY
+    }
+
+    response = requests.get(API_SEARCH_URL, params=params, headers=headers)
+
+    return response.json()
+
+
+def lookup(args, gui=None):
+    """Lookup command."""
+    passage = ' '.join(args.passage)
+
+    if gui:
+        output = io.StringIO()
+    else:
+        output = sys.stdout
+
+    if passage:
+        response = get_esv_text(passage, args.verse)
+
+        passages = response['passages']
+
+        # Check to see if passage exists.
+        if not passages:
+            print('Passage not found')
+            return
+
+        passages_canonical = [i['canonical'] for i in response['passage_meta']]
+
+        first = True
+        for r in zip(passages_canonical, passages):
+
+            if not first:
+                print('\n', file=output)
+            first = False
+
+            lines = r[1].splitlines()
+            wlines = [textwrap.fill(l, 80, expand_tabs=False, replace_whitespace=False, drop_whitespace=True) for l in lines]
+            lines = "\n".join(wlines)
+
+            print(f'{lines}\n— {r[0]}', file=output)
+
+    # if gui:
+    #     gui.text_view.get_buffer().set_text(output.getvalue())
+    #     output.close()
+
+
+def audio(args, gui=None):
+    """Audio command."""
+
+    # Print text as well
+    lookup(args, gui)
+
+    passage = ' '.join(args.passage)
+
+    if passage:
+        response = get_esv_audio(passage)
+
+        if response.apparent_encoding != 'ascii':
+            with tempfile.NamedTemporaryFile(suffix='.mp3') as tf:
+                tf.write(response.content)
+                tf.flush()
+                if args.gui:
+                    subprocess.check_output(['vlc', '--play-and-exit', tf.name], stderr=subprocess.STDOUT)
+                else:
+                    subprocess.check_output(['cvlc', '--play-and-exit', tf.name], stderr=subprocess.STDOUT)
+        else:
+            print(response.json()['errors'])
+
+
+def search(args, gui=None):
+    """Search command."""
+    phrase = ' '.join(args.phrase)
+
+    if gui:
+        output = io.StringIO()
+    else:
+        output = sys.stdout
+
+    if phrase:
+        response = search_esv_text(phrase, args.page_size, args.page)
+
+        print(f"Total Results: {response['total_results']}", file=output)
+        print(f"Page {response['page']} of {response['total_pages']}", file=output)
+        print(file=output)
+
+        results = response['results']
+
+        first = True
+        for r in results:
+
+            if not first:
+                print(file=output)
+            first = False
+
+            print(f"{r['reference']}: {r['content']}", file=output)
+
+    # if gui:
+    #     gui.text_view.get_buffer().set_text(output.getvalue())
+    #     output.close()
+
+
+class ESV():
+    def __init__(self):
+        self.gui = None
+
+        # Parse the arguments
+        self.parser = DefaultSubcommandArgParse(description="""ESV Bible Lookup""")
+        subparsers = self.parser.add_subparsers(help='defaults to lookup', metavar='command')
+
+        # Lookup
+        parser_lookup = subparsers.add_parser('lookup', aliases=['l'], help='Lookup a passage')
+        parser_lookup.add_argument('passage', type=str, nargs='*', help='Passages to lookup')
+        parser_lookup.add_argument('-v', '--verse', action='store_true', help='Show verse numbers')
+        parser_lookup.add_argument('-g', '--gui', action='store_true', help='Launch Gui')
+        parser_lookup.set_defaults(func=lookup)
+
+        # Search
+        parser_search = subparsers.add_parser('search', aliases=['s'], help='search for a phrase')
+        parser_search.add_argument('-s', '--page-size', type=int,  help='results per page', default=20)
+        parser_search.add_argument('-p', '--page', type=int,  help='page of results to show', default=1)
+        parser_search.add_argument('-g', '--gui', action='store_true', help='Launch Gui')
+        parser_search.add_argument('phrase', type=str, nargs='+', help='search phrase')
+        parser_search.set_defaults(func=search)
+
+        # Audio
+        parser_audio = subparsers.add_parser('audio', aliases=['a'], help='read a passage')
+        parser_audio.add_argument('passage', type=str, nargs='+', help='Passages to lookup')
+        parser_audio.add_argument('-v', '--verse', action='store_true', help='Show verse numbers')
+        parser_audio.add_argument('-g', '--gui', action='store_true', help='Launch Gui')
+        parser_audio.set_defaults(func=audio)
+
+        self.parser.set_default_subparser('lookup')
+
+    def parse_func(self, entry):
+        if isinstance(entry, str):
+            entry = entry.split(' ')
+
+        args = self.parser.parse_args(entry)
+
+        # if self.gui == None and (args.gui or len(entry) == 0):
+        #     self.gui = EsvWindow(self)
+        #     self.gui.connect("destroy", Gtk.main_quit)
+        #     self.gui.show_all()
+        #     self.gui.text_bar.set_text(' '.join(entry))
+        #     self.gui.search.clicked()
+        #     Gtk.main()
+
+        # else:
+        args.func(args, self.gui)
+
+
+def main(argv):
+    esv = ESV()
+    esv.parse_func(argv[1:])
+
+
+if __name__ == '__main__':
+    main(sys.argv)

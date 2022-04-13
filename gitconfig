@@ -1,0 +1,47 @@
+[core]
+	editor = vim
+	excludesfile = ~/.gitignore_global
+[push]
+	default = upstream
+[diff]
+	tool = bc3
+[difftool]
+	bc3 = trustExitCode
+	prompt = false
+[difftool "difftastic"]
+	cmd = difft "$LOCAL" "$REMOTE"
+[pager]
+	difft = true
+[merge]
+	tool = bc3
+[merge "tool"]
+	bc3 = trustExitCode
+[credential]
+	helper = store
+[alias]
+	vimdiff = difftool --tool=vimdiff --prompt
+	gvimdiff = difftool --tool=gvimdiff --prompt
+	difft = difftool --tool=difftastic
+	vimmerge = mergetool --tool=vimdiff
+	gvimmerge = mergetool --tool=gvimdiff
+	wdiff = diff --color-words --ignore-all-space
+	tree = log --oneline --decorate --graph --all
+	ctags = !.git/hooks/ctags
+	sup = submodule update --init --recursive --remote
+	sfor = submodule foreach --recursive
+	s = status .
+	hash = rev-parse --short HEAD
+	pwd = rev-parse --show-toplevel
+[init]
+	templatedir = ~/.git_template
+	defaultBranch = main
+[submodule]
+	fetchJobs = 4
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[pull]
+	ff = only
+# vim: shiftwidth=4 tabstop=4 softtabstop=4 noexpandtab

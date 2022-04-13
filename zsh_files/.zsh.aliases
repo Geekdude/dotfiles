@@ -1,0 +1,24 @@
+alias zork='frotz ~/dotfiles/Zorks/Zork/DATA/ZORK1.DAT'
+alias zork2='frotz ~/dotfiles/Zorks/Zork2/DATA/ZORK2.DAT'
+alias zork3='frotz ~/dotfiles/Zorks/Zork3/DATA/ZORK3.DAT'
+#alias ifconfig.me='curl ifconfig.me'
+alias ifconfig.me='dig +short myip.opendns.com @resolver1.opendns.com'
+alias lock='gnome-screensaver-command -l'
+
+function git-reload-hooks { rm -f $(git rev-parse --git-dir)/hooks/*;git init }
+function git-reload-hooks-all { git submodule foreach --recursive 'rm -f $(git rev-parse --git-dir)/hooks/*;git init' }
+
+set-title(){
+  ORIG=$PS1
+  TITLE="\e]2;$@\a"
+  PS1=${ORIG}${TITLE}
+}
+
+gvim () { command gvim --remote-tab-silent "$@" &> /dev/null || command gvim "$@" &> /dev/null; }
+
+# Use nvim as default if installed
+if type nvim > /dev/null 2>&1; then
+   alias vim='nvim'
+   alias vi='nvim'
+fi
+

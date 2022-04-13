@@ -1,0 +1,5 @@
+#!/bin/bash
+# TMUX_SOCKET=/tmp/tmux-$(id -u)/default
+# tmux -S $TMUX_SOCKET new -A -s tmux
+
+tmux new -A -s tmux
