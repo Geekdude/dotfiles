@@ -439,7 +439,8 @@ augroup filetype_vimwiki
 augroup END
 
 "" notational-fzf-vim
-let g:nv_search_paths = ['~/wiki/z']
+" let g:nv_search_paths = ['~/wiki/z']
+let g:nv_search_paths = ['~']
 let g:nv_default_extension = '.wiki'
 nnoremap <silent> <leader>nv :NV<CR>
 
