@@ -53,6 +53,7 @@ done
 # Move bin scripts to bin folder
 mkdir -p ~/bin
 mkdir -p ~/opt/bin
+mkdir -p ~/.local/bin
 for file in bin/*; do
    echo "Creating symlink to $file in bin directory."
    ln -sf $dir/$file ~/bin

@@ -5,7 +5,7 @@ set -gx EDITOR vim
 set -gx VISUAL vim
 set -gx TERM screen-256color
 set -gx MAKEFLAGS $MAKEFLAGS -j(nproc)
-set -gx MANPATH $HOME/.local/share/man $MANPATH
+# set -gx MANPATH $HOME/.local/share/man /etc/manpath.config # Don't do this instead create a corresponding bin folder. See https://askubuntu.com/questions/197461/how-to-set-manpath-without-overriding-defaults
 set -gx BROWSER google-chrome # fix inkscape bug
 # umask 077
 
