@@ -30,6 +30,7 @@
 	sup = submodule update --init --recursive --remote
 	sfor = submodule foreach --recursive
 	s = status .
+	d = diff .
 	hash = rev-parse --short HEAD
 	pwd = rev-parse --show-toplevel
 [init]
