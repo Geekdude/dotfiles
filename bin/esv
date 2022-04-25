@@ -92,7 +92,7 @@ class DefaultSubcommandArgParse(argparse.ArgumentParser):
 #         self.esv.parse_func(self.text_bar.get_text())
 
 
-API_KEY = 'Secret'
+API_KEY = 'Secret' # Create your own API key from api.esv.org and paste it here.
 API_TEXT_URL = 'https://api.esv.org/v3/passage/text/'
 API_AUDIO_URL = 'https://api.esv.org/v3/passage/audio/'
 API_SEARCH_URL = 'https://api.esv.org/v3/passage/search/'
@@ -201,13 +201,28 @@ def audio(args, gui=None):
         response = get_esv_audio(passage)
 
         if response.apparent_encoding != 'ascii':
-            with tempfile.NamedTemporaryFile(suffix='.mp3') as tf:
-                tf.write(response.content)
-                tf.flush()
-                if args.gui:
-                    subprocess.check_output(['vlc', '--play-and-exit', tf.name], stderr=subprocess.STDOUT)
-                else:
-                    subprocess.check_output(['cvlc', '--play-and-exit', tf.name], stderr=subprocess.STDOUT)
+            if args.save == None:
+                with tempfile.NamedTemporaryFile(suffix='.mp3') as tf:
+                    tf.write(response.content)
+                    tf.flush()
+                    if not args.no_play:
+                        if args.gui:
+                            subprocess.check_output(['vlc', '--play-and-exit', tf.name], stderr=subprocess.STDOUT)
+                        else:
+                            # subprocess.check_output(['cvlc', '--play-and-exit', tf.name], stderr=subprocess.STDOUT)
+                            subprocess.check_output(['mpg123', tf.name], stderr=subprocess.STDOUT)
+            else:
+                if not args.save.endswith('.mp3'):
+                    args.save = args.save + '.mp3'
+                with open(args.save, 'wb') as tf:
+                    tf.write(response.content)
+                    tf.flush()
+                    if not args.no_play:
+                        if args.gui:
+                            subprocess.check_output(['vlc', '--play-and-exit', tf.name], stderr=subprocess.STDOUT)
+                        else:
+                            # subprocess.check_output(['cvlc', '--play-and-exit', tf.name], stderr=subprocess.STDOUT)
+                            subprocess.check_output(['mpg123', tf.name], stderr=subprocess.STDOUT)
         else:
             print(response.json()['errors'])
 
@@ -272,6 +287,8 @@ class ESV():
         parser_audio.add_argument('passage', type=str, nargs='+', help='Passages to lookup')
         parser_audio.add_argument('-v', '--verse', action='store_true', help='Show verse numbers')
         parser_audio.add_argument('-g', '--gui', action='store_true', help='Launch Gui')
+        parser_audio.add_argument('-s', '--save', metavar="FILE", type=str, help='Save audio as file', default=None)
+        parser_audio.add_argument('-n', '--no-play', action="store_true", help='Do not play audio')
         parser_audio.set_defaults(func=audio)
 
         self.parser.set_default_subparser('lookup')
