@@ -22,7 +22,7 @@ So, to recap, the install script will:
 This method shows the general setups to setup the dotfiles, but is too simplistic if using private repositories.
 
 ``` bash
-git clone --recursive git@bitbucket.org:Geekdude/dotfiles.git
+git clone --recursive https://github.com/Geekdude/dotfiles.git
 cd ~/dotfiles
 ./makesymlinks.sh
 ./install-git-latexdiff.sh
@@ -34,9 +34,9 @@ cd ~/dotfiles
 These detailed instructions are the steps I have to take when private repositories are used.
 
 1. Add ssh keys to the system.
-2. Clone dotfiles from bitbucket.
+2. Clone dotfiles from GitHub.
 
-        $ git clone git@bitbucket.org:Geekdude/dotfiles.git
+        $ git clone https://github.com/Geekdude/dotfiles.git
 
 3. Start ssh agent.
 
