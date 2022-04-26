@@ -1,4 +1,6 @@
 function fish_prompt --description 'Write out the prompt'
+   set -g fish_prompt_last_status $status
+
    # Just calculate this once, to save a few cycles when displaying the prompt
    if not set -q __fish_prompt_hostname
       set -g __fish_prompt_hostname (hostname|cut -d . -f 1)

@@ -1,5 +1,4 @@
 function fish_right_prompt -d "Write out the right prompt"
-   set -l last_status $status
 
    set -l normal (set_color normal)
    set -l right_color (set_color cyan)
@@ -9,8 +8,8 @@ function fish_right_prompt -d "Write out the right prompt"
 
    # Setup Prompt status
    set -l prompt_status
-   if test $last_status -ne 0
-      set prompt_status $fish_color_status "$last_status ↵ " $normal
+   if test $fish_prompt_last_status -ne 0
+      set prompt_status $fish_color_status "$fish_prompt_last_status ↵ " $normal
    end
 
    # Setup timer
